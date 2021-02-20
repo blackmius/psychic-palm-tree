@@ -10,6 +10,7 @@ public class Palindrome {
     }
     
     public static String reverse(String s) {
+        // Переворачивает строку в обратном порядке
         String result = "";
         for (int i = s.length() - 1; i >= 0; i--) {
             result += s.charAt(i);
@@ -18,6 +19,7 @@ public class Palindrome {
     }
     
     public static boolean isPalindrome(String s) {
+        // проверка, что строка является палиндромом
         return s.equals(reverse(s));
     }
 }
