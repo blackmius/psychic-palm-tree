@@ -1,4 +1,5 @@
 import java.util.*;
+import java.math.BigInteger ;
 
 import java.time.*;
 
@@ -1162,9 +1163,25 @@ class Tasks {
        стихом.
        - Точка, отделяющая целую часть числа Пи от десятичной, не должна учитываться в
        функции: она присутствует в инструкциях и примерах только для удобства чтения. */
-       
+
+
     public static String pilish_string(String str) {
-        return "";
+        // тут должна быть функция для высчитывания PI
+        String res = "";
+        String pi = String.valueOf(Math.PI).replace(".", "");
+        int piIndex = 0;
+        while (str.length() > 0) {
+            int p = pi.charAt(piIndex) - 48;
+            int n = Math.min(p, str.length());
+            res += str.substring(0, n);
+            str = str.substring(n);
+            piIndex++;
+            if (str.length() > 0) res += ' ';
+            else if (p > n)
+                for (int i = 0; i < p - n; i++)
+                    res += res.charAt(res.length() - 1);
+        }
+        return res;
     }
     
     /* 8. Создайте функцию для генерации всех непоследовательных двоичных строк, где
@@ -1172,7 +1189,18 @@ class Tasks {
        строк, и где n определяет длину каждой двоичной строки. */
        
     public static String generateNonconsecutive(int n) {
-        return "";
+        String res = "";
+        String format = "%" + n + 's';
+        int count = 2 << (n-1);
+        nextNumber:
+        for (int i = 0; i < count; i++) {
+            String num = String.format(format, Integer.toBinaryString(i)).replace(' ', '0');
+            for (int j = 0; j < n - 1; j++)
+                if (num.charAt(j) == '1' && num.charAt(j+1) == '1')
+                    continue nextNumber;
+            res += num + ' ';
+        }
+        return res.substring(0, res.length() - 1);
     }
     
     /* 9. Шерлок считает строку действительной, если все символы строки встречаются
@@ -1188,7 +1216,24 @@ class Tasks {
        к одинаковой частоте символов. */
        
     public static String isValid(String str) {
-        return "";
+        int[] set = getLetterSet(str);
+        int[] medium = new int[str.length()];
+        for (int i = 0; i < set.length; i++)
+            if (set[i] != 0) medium[set[i]]++;
+        int cur = 0;
+        int max = 0;
+        for (int i = 0; i < medium.length; i++)
+            if (medium[i] > cur) {
+                cur = medium[i];
+                max = i;
+            }
+        boolean index = false;
+        for (int i = 0; i < set.length; i++)
+            if (set[i] != 0 && max - set[i] != 0) {
+                if (index) return "NO";
+                index = true;
+            }
+        return "YES";
     }
     
     /* 10. Создайте функцию, которая получает каждую пару чисел из массива, который
@@ -1196,7 +1241,25 @@ class Tasks {
        возрастанию). */
        
     public static int[][] sumsUp(int[] arr) {
-        return new int[][] {};
+        ArrayList<int[]> res = new ArrayList<>();
+        HashMap<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < arr.length; i++) {
+            if (map.containsKey(8 - arr[i])) {
+                int a = arr[i];
+                int b = 8 - a;
+                if (a > b) {
+                    b = a;
+                    a = 8 - b;
+                }
+                res.add(new int[] {i - map.get(8-arr[i]), a, b});
+            }
+            map.put(arr[i], i);
+        }
+        Collections.sort(res, (o1, o2) -> o1[0]-o2[0]);
+        int[][] newRes = new int[res.size()][];
+        for (int i = 0; i < res.size(); i++)
+            newRes[i] = new int[] {res.get(i)[1], res.get(i)[2]};
+        return newRes;
     }
     
     /* ТЕСТЫ ТЕСТЫ ТЕСТЫ */
@@ -1632,19 +1695,19 @@ class Tasks {
         // All characters occur twice except for e which occurs 3 times.
         // We can delete one instance of e to have a valid string.
         
-        assert Arrays.equals(
+        assert Arrays.deepEquals(
             sumsUp(new int[] {1, 2, 3, 4, 5}),
             new int[][] {{3, 5}}
         );
-        assert Arrays.equals(
+        assert Arrays.deepEquals(
             sumsUp(new int[] {1, 2, 3, 7, 9}),
             new int[][] {{1, 7}}
         );
-        assert Arrays.equals(
+        assert Arrays.deepEquals(
             sumsUp(new int[] {10, 9, 7, 2, 8}),
             new int[][] {}
         );
-        assert Arrays.equals(
+        assert Arrays.deepEquals(
             sumsUp(new int[] {1, 6, 5, 4, 8, 2, 3, 7}),
             new int[][] {{2, 6}, {3, 5}, {1, 7}}
         );
