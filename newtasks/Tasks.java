@@ -911,9 +911,39 @@ class Tasks {
        содержать знаки препинания и другие не-альфа-символы.
        - Игнорируйте регистр символов и любые встроенные не-альфа-символы.
        - Если в предложении больше 1 результата, верните ближайший к началу. */
+
+    public static int[] getLetterSet(String str) {
+        int[] set = new int[26];
+        for (char c : str.toCharArray())
+            set[c - 97]++;
+        return set;
+    }
+
+    public static String onlyLetters(String str) {
+        str = str.toLowerCase();
+        String res = "";
+        for (char c : str.toCharArray())
+            if (97 <= c && c <= 122)
+                res += c;
+        return res;
+    }
     
-    public static String hiddenAnagram(String[]) {
-        return "";
+    public static String hiddenAnagram(String a, String b) {
+        a = onlyLetters(a);
+        b = onlyLetters(b);
+        int[] setB = getLetterSet(b);
+        for (int i = 0; i <= a.length() - b.length(); i++) {
+            String substr = a.substring(i, i+b.length());
+            int[] setA = getLetterSet(substr);
+            if (Arrays.equals(setA, setB)) {
+                String res = "";
+                for (char c : substr.toCharArray())
+                    if (97 <= c && c <= 122)
+                        res += c;
+                return res;
+            }
+        }
+        return "noutfond";
     }
     
     /* 2. Напишите функцию, которая возвращает массив строк, заполненных из срезов
@@ -924,9 +954,20 @@ class Tasks {
        - Убедитесь, что результирующий массив лексикографически упорядочен.
        - Возвращает пустой массив, если заданная строка меньше n.
        - Ожидается, что вы решите эту задачу с помощью рекурсивного подхода. */
-       
+
     public static String[] collect(String s, int n) {
-        return new String[] {};
+        if (s.length() < n)
+            return new String[] {};
+        String[] res = collect(s.substring(n), n);
+        String head = s.substring(0, n);
+        String[] newRes = new String[res.length+1];
+        int index = 0;
+        while (index < res.length && res[index].compareTo(head) < 0) index++;
+        System.arraycopy(res, 0, newRes, 0, index);
+        System.arraycopy(res, index, newRes, index+1, res.length - index);
+        // с этими вставками лучше использовать LinkedList
+        newRes[index] = head;
+        return newRes;
     }
     
     /* 3. В шифре Nico кодирование осуществляется путем создания цифрового ключа и
@@ -959,13 +1000,33 @@ class Tasks {
         ---------
         b m u s a
         r h i a h
-        a s s n
+        a s s   n
        
        Шаг 4: Верните закодированное сообщение по строкам:
        eMessage = "bmusarhiahass n" */
-    
+
     public static String nicoCipher(String message, String key) {
-        return "";
+        for (int i = 0; i < (message.length()+key.length()) % key.length(); i++)
+            message += ' ';
+        int[] set = getCharset(key);
+        int[] setCount = set.clone();
+        int counter = 1;
+        for (int i = 0; i < set.length; i++)
+            if (set[i] != 0) {
+                if (set[i] > 1)
+                    counter += set[i] - 1;
+                set[i] = counter++;
+            }
+        int[] offsets = new int[key.length()];
+        for (int i = 0; i < key.length(); i++)
+            offsets[set[key.charAt(i)]-setCount[key.charAt(i)]--] = i; 
+        String res = "";
+        for (int i = 0; i < message.length(); i++) {
+            int index = (i / offsets.length) * offsets.length + offsets[i % offsets.length];
+            res += message.charAt(index);
+        }
+ 
+        return res;
     }
     
     /* 4. Создайте метод, который принимает массив arr и число n и возвращает массив из
@@ -986,6 +1047,12 @@ class Tasks {
        найденное полное совпадение (как описано выше). */
     
     public static int[] twoProduct(int[] arr, int n) {
+        HashSet<Integer> set = new HashSet<>();
+        for (int m : arr) {
+            if (n % m == 0 && set.contains(n / m))
+                return new int[] {n/m, m};
+            set.add(m);
+        }
         return new int[] {};
     }
     
@@ -995,8 +1062,16 @@ class Tasks {
        
        Примечание:
        - Ожидается, что вы решите эту задачу с помощью рекурсии. */
+    
+    public static int[] isExact(int f, int m, int n) {
+        if (f < n)
+            return isExact(f*(m+1), m+1, n);
+        return new int[] {f, m};
+    }
        
     public static int[] isExact(int n) {
+        int[] res = isExact(1, 1, n);
+        if (res[0] == n) return res;
         return new int[] {};
     }
     
@@ -1009,7 +1084,17 @@ class Tasks {
        строковой форме и в наименьших членах. */
        
     public static String fractions(String frac) {
-        return "";
+        int startBracket = frac.indexOf('(');
+        if (startBracket != -1) {
+            String f = frac.substring(startBracket+1, frac.length()-1);
+            frac = frac.substring(0, startBracket);
+            for (int i = 0; i < 9 - f.length(); i++)
+                frac += f;
+        }
+        double a = Double.parseDouble(frac);
+        int div = 2;
+        while (Math.ceil(a * div) - a * div > 0.000001) div++;
+        return "" + (int)Math.ceil(a * div) + "/" + div;
     }
     
     /* 7. В этой задаче преобразуйте строку в серию слов (или последовательности
@@ -1416,7 +1501,6 @@ class Tasks {
         assert isNew(123) == true;
         
         // ЗАДАЧИ 6/6
-        
         assert hiddenAnagram("My world evolves in a beautiful space called Tesh.", "sworn love lived").equals("worldevolvesin");
         // The sequence "world evolves in" is a perfect anagram of "sworn love lived".
         assert hiddenAnagram("An old west action hero actor", "Clint Eastwood").equals("noldwestactio");
@@ -1444,16 +1528,16 @@ class Tasks {
             new String[] {"eng", "str", "ths"}
         );
         assert Arrays.equals(
-            collect("pneumonoultramicroscopicsilicovolcanoconiosis", 15)
+            collect("pneumonoultramicroscopicsilicovolcanoconiosis", 15),
             new String[] {"croscopicsilico", "pneumonoultrami", "volcanoconiosis"}
         );
-        
+
         assert nicoCipher("myworldevolvesinhers", "tesh").equals("yowmledrovlvsnieesrh");
         assert nicoCipher("andiloveherso", "tesha").equals("lnidaevheo s or");
         assert nicoCipher("mubashirhassan", "crazy").equals("bmusarhiahass n");
         assert nicoCipher("edabitisamazing", "matt").equals("deabtiismaaznig ");
-        assert nicoCipher("iloveher", "612345").equals("lovehir e");
-        
+        assert nicoCipher("iloveher", "612345").equals("lovehir    e");
+
         assert Arrays.equals(
             twoProduct(new int[] {1, 2, 3, 9, 4, 5, 15, 3}, 45),
             new int[] {9, 5}
